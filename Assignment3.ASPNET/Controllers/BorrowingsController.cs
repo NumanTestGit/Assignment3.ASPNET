@@ -20,17 +20,22 @@ namespace Assignment3.ASPNET.Controllers
         }
 
         // GET: Borrowings
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-              return _context.Borrowing != null ? 
-                          View(await _context.Borrowing.ToListAsync()) :
-                          Problem("Entity set 'Assignment3ASPNETContext.Borrowing'  is null.");
+            var borrowings = from b in _context.Borrowing select b;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                borrowings = borrowings.Where(b => b.Reader.Name.Contains(searchString));
+            }
+
+            return View(await borrowings.ToListAsync());
         }
 
         // GET: Borrowings/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Borrowing == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -52,8 +57,6 @@ namespace Assignment3.ASPNET.Controllers
         }
 
         // POST: Borrowings/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("BorrowingId,BorrowDate,ReturnDate")] Borrowing borrowing)
@@ -70,7 +73,7 @@ namespace Assignment3.ASPNET.Controllers
         // GET: Borrowings/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Borrowing == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -84,8 +87,6 @@ namespace Assignment3.ASPNET.Controllers
         }
 
         // POST: Borrowings/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("BorrowingId,BorrowDate,ReturnDate")] Borrowing borrowing)
@@ -121,7 +122,7 @@ namespace Assignment3.ASPNET.Controllers
         // GET: Borrowings/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Borrowing == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -141,23 +142,15 @@ namespace Assignment3.ASPNET.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Borrowing == null)
-            {
-                return Problem("Entity set 'Assignment3ASPNETContext.Borrowing'  is null.");
-            }
             var borrowing = await _context.Borrowing.FindAsync(id);
-            if (borrowing != null)
-            {
-                _context.Borrowing.Remove(borrowing);
-            }
-            
+            _context.Borrowing.Remove(borrowing);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool BorrowingExists(int id)
         {
-          return (_context.Borrowing?.Any(e => e.BorrowingId == id)).GetValueOrDefault();
+            return _context.Borrowing.Any(e => e.BorrowingId == id);
         }
     }
 }

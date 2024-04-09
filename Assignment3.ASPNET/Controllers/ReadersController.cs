@@ -20,17 +20,25 @@ namespace Assignment3.ASPNET.Controllers
         }
 
         // GET: Readers
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-              return _context.Reader != null ? 
-                          View(await _context.Reader.ToListAsync()) :
-                          Problem("Entity set 'Assignment3ASPNETContext.Reader'  is null.");
+            var readers = from r in _context.Reader select r;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                readers = readers.Where(r => r.Name.Contains(searchString)
+                                            || r.Email.Contains(searchString)
+                                            || r.Address.Contains(searchString)
+                                            || r.Phone.Contains(searchString));
+            }
+
+            return View(await readers.ToListAsync());
         }
 
         // GET: Readers/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Reader == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -52,8 +60,6 @@ namespace Assignment3.ASPNET.Controllers
         }
 
         // POST: Readers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ReaderId,Name,Email,Address,Phone")] Reader reader)
@@ -70,7 +76,7 @@ namespace Assignment3.ASPNET.Controllers
         // GET: Readers/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Reader == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -84,8 +90,6 @@ namespace Assignment3.ASPNET.Controllers
         }
 
         // POST: Readers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ReaderId,Name,Email,Address,Phone")] Reader reader)
@@ -121,7 +125,7 @@ namespace Assignment3.ASPNET.Controllers
         // GET: Readers/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Reader == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -141,23 +145,15 @@ namespace Assignment3.ASPNET.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Reader == null)
-            {
-                return Problem("Entity set 'Assignment3ASPNETContext.Reader'  is null.");
-            }
             var reader = await _context.Reader.FindAsync(id);
-            if (reader != null)
-            {
-                _context.Reader.Remove(reader);
-            }
-            
+            _context.Reader.Remove(reader);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool ReaderExists(int id)
         {
-          return (_context.Reader?.Any(e => e.ReaderId == id)).GetValueOrDefault();
+            return _context.Reader.Any(e => e.ReaderId == id);
         }
     }
 }
